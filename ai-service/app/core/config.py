@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # --- RAG ---
     retrieval_top_k: int = Field(default=5, gt=0, le=50)
-    relevance_threshold: float = Field(default=0.55, ge=0.0, le=1.0)
+    relevance_threshold: float = Field(default=0.25, ge=0.0, le=1.0)
 
     # --- Sécurité ---
     internal_api_key: SecretStr = SecretStr("change-me")

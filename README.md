@@ -19,7 +19,7 @@ DocuMind AI est une application web complète d’analyse et de chat avec des do
   - Génération d'embeddings par lots de 32 via le modèle multilingue `bge-m3` (1024 dimensions).
   - Indexation idempotente dans Qdrant (pas de doublons lors d'un réimport).
   - Reformulation contextuelle des questions de suivi à partir de l'historique conversationnel.
-  - Filtrage par seuil de pertinence cosinus (`RELEVANCE_THRESHOLD = 0.55`) : si aucun extrait ne correspond, le service répond immédiatement sans appel LLM inutile.
+  - Filtrage par seuil de pertinence cosinus (`RELEVANCE_THRESHOLD = 0.25`) : si aucun extrait ne correspond, le service répond immédiatement sans appel LLM inutile.
   - Réponses sourcées avec références exactes (`[Source N]`, page, fichier, extrait).
 - **Fonctionnalités documentaires avancées** :
   - **Résumé global** d'un document complet via un pipeline Map-Reduce.
@@ -73,7 +73,7 @@ Question de l'utilisateur (+ Historique de conversation)
 3. Recherche sémantique Qdrant (filtrage STRICT obligatoire par user_id)
       │
       ▼
-4. Filtrage par seuil de pertinence cosinus (RELEVANCE_THRESHOLD = 0.55)
+4. Filtrage par seuil de pertinence cosinus (RELEVANCE_THRESHOLD = 0.25)
       ├─ Aucun chunk pertinent ?
       │  └── Réponse immédiate : « L'information ne figure pas dans les documents »
       │      (aucun appel LLM inutile, économie de ressources)
