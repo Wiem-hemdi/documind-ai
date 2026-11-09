@@ -1,0 +1,27 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies and virtual environments
+node_modules/
+venv/
+.venv/
+
+# Generated Python files
+__pycache__/
+*.py[cod]
+
+# Build output and local uploads
+dist/
+dist-ssr/
+uploads/
+**/uploads/
+
+# Local tooling
+.idea/
+.vscode/*
+!.vscode/extensions.json
