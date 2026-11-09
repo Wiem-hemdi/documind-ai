@@ -76,15 +76,35 @@ Vite est normalement disponible sur `http://localhost:5173`. Il transmet `/api` 
 
 `http://localhost:3000` et `http://localhost:5173` servent la même application, mais avec des modes différents : version Docker compilée sur le port 3000 et serveur de développement Vite sur le port 5173.
 
-## Ollama et questions à l’assistant
+## Fonctionnement de l’assistant IA
 
-Dans Docker Compose, le service IA contacte Ollama sur l’hôte à l’adresse `http://host.docker.internal:11434`. Si Ollama écoute ailleurs, définissez `OLLAMA_BASE_URL` dans `.env`, puis redémarrez le service :
+Quand vous posez une question depuis la fenêtre d’un document, le flux est le suivant :
+
+1. Le frontend envoie la question à l’API backend avec votre session.
+2. Le backend vérifie que le document appartient à votre compte, récupère le fichier original et les 12 derniers messages de cette conversation, puis transmet le tout au service IA.
+3. Le service IA extrait à nouveau le texte du fichier. Pour les pages PDF scannées, il utilise aussi l’OCR configuré plus bas.
+4. Le texte du document, limité à 24 000 caractères, la question et l’historique récent sont envoyés au modèle Ollama sélectionné. Si le texte est tronqué, l’interface le signale : des informations situées plus loin dans le document peuvent ne pas être prises en compte.
+5. La réponse et la question sont enregistrées dans MongoDB. L’historique complet est conservé par document; seuls les 12 derniers messages sont réutilisés comme contexte pour répondre à la question suivante.
+
+Le modèle reçoit comme consigne de répondre en français en s’appuyant sur le texte transmis et de signaler clairement si la réponse n’y figure pas. Il peut néanmoins se tromper : vérifiez les réponses importantes dans le document original.
+
+Ce flux de chat extrait le texte du document directement et ne fait pas de recherche vectorielle dans Qdrant. Qdrant est démarré par Compose, mais n’est pas utilisé pour sélectionner le contexte des questions dans ce flux.
+
+### Configurer Ollama
+
+Avec Docker Compose, le service IA contacte Ollama sur l’hôte à l’adresse `http://host.docker.internal:11434`. Assurez-vous qu’Ollama fonctionne et que le modèle par défaut est téléchargé :
+
+```powershell
+ollama pull qwen2.5:7b
+```
+
+Le modèle de conversation par défaut est `qwen2.5:7b`. Pour en choisir un autre, définissez `LLM_MODEL` dans le fichier `.env` à la racine, téléchargez ce modèle dans Ollama, puis recréez le service IA. Si Ollama écoute à une autre adresse, définissez aussi `OLLAMA_BASE_URL`.
 
 ```powershell
 docker compose up -d --build ai-service
 ```
 
-Le modèle de conversation par défaut est `qwen2.5:7b`. Pour Docker Compose, vous pouvez le modifier en définissant `LLM_MODEL` dans le fichier `.env` à la racine, puis en recréant le service IA.
+En configuration Docker locale par défaut, le modèle s’exécute sur votre machine via Ollama. Si vous configurez une URL Ollama distante, le texte du document et la question lui seront transmis. Le service IA retourne une erreur si Ollama est indisponible ou si le modèle configuré n’est pas prêt.
 
 ## OCR des PDF scannés
 
