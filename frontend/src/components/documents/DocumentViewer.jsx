@@ -230,7 +230,7 @@ function DocumentViewer({ document, onClose }) {
               <span className="assistant-avatar"><Bot size={18} /></span>
               <div>
                 <h3 id="document-chat-title">Assistant sur ce document</h3>
-                <p>Les réponses s’appuient sur le texte extrait.</p>
+                <p>Les réponses citent les extraits trouvés par recherche RAG.</p>
               </div>
             </div>
 

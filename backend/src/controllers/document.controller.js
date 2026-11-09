@@ -7,7 +7,7 @@ import {
     listUserDocuments,
     saveUserDocument
 } from "../services/document.service.js";
-import { requestAiDocument } from "../services/ai.service.js";
+import { deleteAiDocumentIndex, requestAiDocument } from "../services/ai.service.js";
 import {
     clearDocumentChatHistory,
     getRecentDocumentChatHistory,
@@ -168,9 +168,18 @@ export const askAboutDocument = async (req, res) => {
         const history = await getRecentDocumentChatHistory(req.user.id, document._id);
         const data = await requestAiDocument(document, "chat", {
             question,
-            history: JSON.stringify(history)
+            history: JSON.stringify(history),
+            owner_id: req.user.id,
+            document_id: document._id.toString()
         });
-        await saveDocumentChatExchange(req.user.id, document._id, question, data.answer);
+        const sources = Array.isArray(data.sources) ? data.sources : [];
+        const answer = sources.length
+            ? `${data.answer}\n\nSources : ${sources.map(
+                (source) => `[Source ${source.id}] ${source.location}`
+            ).join("; ")}`
+            : data.answer;
+        await saveDocumentChatExchange(req.user.id, document._id, question, answer);
+        data.answer = answer;
         data.history = await listDocumentChatHistory(req.user.id, document._id);
         return res.status(200).json({ success: true, data });
     } catch (error) {
@@ -217,6 +226,7 @@ export const removeDocument = async (req, res) => {
             throw new Error("Invalid stored document path");
         }
 
+        await deleteAiDocumentIndex(req.user.id, document._id);
         try {
             await unlink(path.join(uploadDirectory, storedName));
         } catch (error) {
@@ -227,9 +237,9 @@ export const removeDocument = async (req, res) => {
         return res.status(200).json({ success: true, message: "Document deleted" });
     } catch (error) {
         console.error("Document deletion failed:", error.message);
-        return res.status(500).json({
+        return res.status(error.statusCode || 500).json({
             success: false,
-            message: "Unable to delete document"
+            message: error.message || "Unable to delete document"
         });
     }
 };
