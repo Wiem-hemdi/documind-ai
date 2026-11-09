@@ -172,14 +172,8 @@ export const askAboutDocument = async (req, res) => {
             owner_id: req.user.id,
             document_id: document._id.toString()
         });
-        const sources = Array.isArray(data.sources) ? data.sources : [];
-        const answer = sources.length
-            ? `${data.answer}\n\nSources : ${sources.map(
-                (source) => `[Source ${source.id}] ${source.location}`
-            ).join("; ")}`
-            : data.answer;
+        const answer = data.answer;
         await saveDocumentChatExchange(req.user.id, document._id, question, answer);
-        data.answer = answer;
         data.history = await listDocumentChatHistory(req.user.id, document._id);
         return res.status(200).json({ success: true, data });
     } catch (error) {
